@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Schätzfragen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="quiz-page">
+
+<div class="quiz-container">
+
+    <h1>🔢 Schätzfragen</h1>
+
+    <div id="estimateArea">
+        <div id="estimateProgress" style="margin-bottom:10px;"></div>
+
+        <div class="estimate-progress-container">
+            <div id="estimateProgressBar" class="estimate-progress-bar"></div>
+        </div>        
+
+        <div id="estimateTimer"
+            style="text-align:right; margin-bottom:10px;">
+            ⏱️ 20
+        </div>
+
+
+        <div class="question" id="estimateQuestion"></div>
+
+        <input
+            type="number"
+            id="estimateInput"
+            placeholder="Deine Schätzung"
+            style="
+                width:100%;
+                padding:12px;
+                margin-top:15px;
+                border-radius:10px;
+                border:none;
+                font-size:16px;
+            "
+        >
+
+        <button onclick="submitEstimate()" style="margin-top:15px;">
+            ✔ Abschicken
+        </button>
+
+        <div id="estimateFeedback" style="margin-top:20px;"></div>
+
+        <button id="estimateNext"
+                onclick="nextEstimate()"
+                style="display:none; margin-top:15px;">
+            ➡ Weiter
+        </button>
+    </div>
+
+    <div id="estimateEnd"
+         style="display:none; text-align:center;">
+        <h2>🎉 Runde beendet!</h2>
+        <p id="estimateScore"></p>
+
+        <button onclick="restartEstimate()" class="end-btn secondary">
+            🔁 Nochmal spielen
+        </button>
+
+        <br><br>
+
+        <button onclick="window.location.href='index.html'"
+                class="end-btn primary">
+            ⬅ Zurück zur Übersicht
+        </button>
+    </div>
+
+</div>
+
+<script src="estimate.js"></script>
+</body>
+</html>

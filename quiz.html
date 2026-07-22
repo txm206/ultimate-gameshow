@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="quiz-page">
+
+<div class="quiz-container">
+
+    <!-- =========================
+         SCHWIERIGKEIT AUSWAHL
+    ========================= -->
+    <div id="difficultySelect">
+        <h1>❓ Quiz</h1>
+        <p style="text-align:center; margin-bottom:25px;">
+            Wähle eine Schwierigkeitsstufe
+        </p>
+
+        <div class="answers">
+            <button onclick="startQuiz('leicht')" class="difficulty easy">🟢 Leicht</button>
+            <button onclick="startQuiz('mittel')" class="difficulty medium">🟡 Mittel</button>
+            <button onclick="startQuiz('schwer')" class="difficulty hard">🔴 Schwer</button>
+            <button onclick="startQuiz('ultra')" class="difficulty ultra">🟣 Ultra</button>
+        </div>
+    </div>
+
+    <!-- =========================
+         QUIZ BEREICH
+    ========================= -->
+    <div id="quizArea" style="display:none;">
+        <h1>❓ Quiz</h1>
+
+        <!-- Progress / Score / Sound -->
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div id="progress"></div>
+
+            <div id="score" style="font-size:14px; color:#8b949e;">
+                Score: 0
+            </div>
+
+            <button id="soundToggle"
+                    onclick="toggleSound()"
+                    style="background:none;border:none;color:#58a6ff;font-size:18px;cursor:pointer;">
+                🔊
+            </button>
+        </div>
+
+        <!-- Score Popup -->
+        <div id="scorePopup"></div>
+
+        <!-- Progressbar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Timer -->
+        <div id="timer"></div>
+
+        <!-- Frage -->
+        <div class="question quiz-animate" id="question"></div>
+
+        <!-- Antworten -->
+        <div class="answers quiz-animate">
+            <button id="a0" onclick="answer(0)"></button>
+            <button id="a1" onclick="answer(1)"></button>
+            <button id="a2" onclick="answer(2)"></button>
+            <button id="a3" onclick="answer(3)"></button>
+        </div>
+
+        <!-- Feedback -->
+        <div id="feedback"></div>
+
+        <!-- Weiter -->
+        <button id="nextBtn" onclick="nextQuestion()">➡ Weiter</button>
+    </div>
+
+    <!-- =========================
+         ENDSCREEN
+    ========================= -->
+    <div id="endScreen" style="display:none; text-align:center;">
+        <h1>🎉 Quiz beendet!</h1>
+
+        <p id="highscoreText" style="color:#8b949e; margin-bottom:20px;"></p>
+
+        <button onclick="restartSameDifficulty()" class="end-btn secondary">
+            🔁 Gleiche Schwierigkeit nochmal
+        </button>
+
+        <br><br>
+
+        <button onclick="showDifficultySelect()" class="end-btn secondary">
+            🔄 Andere Schwierigkeit
+        </button>
+
+        <br><br>
+
+        <button onclick="window.location.href='index.html'" class="end-btn primary">
+            ⬅ Zurück zur Übersicht
+        </button>
+    </div>
+
+</div>
+
+<!-- =========================
+     SCRIPT
+========================= -->
+<script>
+/* =========================
+   AUDIO
+========================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let soundEnabled = localStorage.getItem("soundEnabled") !== "false";
+
+function playTone(freq, dur, type = "sine", vol = 0.2) {
+    if (!soundEnabled) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+}
+
+function playCorrectSound() {
+    playTone(880, 0.15);
+    setTimeout(() => playTone(1320, 0.12), 150);
+}
+function playWrongSound() {
+    playTone(220, 0.3, "square");
+}
+function playClickSound() {
+    playTone(600, 0.05, "triangle", 0.15);
+}
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem("soundEnabled", soundEnabled);
+    document.getElementById("soundToggle").innerText =
+        soundEnabled ? "🔊" : "🔇";
+}
+
+/* =========================
+   FRAGEN (BEISPIEL)
+========================= */
+const allQuestions = [
+
+{
+question: "Wie viele Tage hat eine Woche?",
+answers: ["7","5","10","12"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Monate hat ein Jahr?",
+answers: ["12","10","6","8"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat der Himmel bei gutem Wetter?",
+answers: ["Blau","Grün","Rot","Gelb"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Beine hat eine Spinne?",
+answers: ["8","6","4","10"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Zahl kommt nach 9?",
+answers: ["10","11","8","12"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier sagt 'Miau'?",
+answers: ["Katze","Hund","Kuh","Pferd"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Minuten hat eine Stunde?",
+answers: ["60","30","100","45"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Jahreszeit kommt nach dem Frühling?",
+answers: ["Sommer","Winter","Herbst","Monsoon"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe entsteht aus Blau und Gelb?",
+answers: ["Grün","Rot","Orange","Lila"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Beine hat ein Mensch?",
+answers: ["2","4","1","3"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier bellt?",
+answers: ["Hund","Katze","Vogel","Fisch"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Form hat ein Fußball?",
+answers: ["Rund","Quadratisch","Dreieckig","Oval"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Finger hat ein Mensch an einer Hand?",
+answers: ["5","4","6","3"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was trinken Kühe?",
+answers: ["Wasser","Milch","Saft","Cola"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie heißt unser Planet?",
+answers: ["Erde","Mars","Venus","Jupiter"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat Gras?",
+answers: ["Grün","Blau","Schwarz","Weiß"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Stunden hat ein Tag?",
+answers: ["24","12","48","36"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was ist 2 + 2?",
+answers: ["4","3","5","6"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier legt Eier?",
+answers: ["Huhn","Kuh","Hund","Schaf"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat Schnee?",
+answers: ["Weiß","Blau","Grün","Rot"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Augen hat ein Mensch?",
+answers: ["2","1","3","4"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was scheint am Tag?",
+answers: ["Die Sonne","Der Mond","Die Sterne","Ein Planet"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier kann fliegen?",
+answers: ["Vogel","Elefant","Kuh","Hund"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Räder hat ein Fahrrad?",
+answers: ["2","3","4","1"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was braucht ein Mensch zum Atmen?",
+answers: ["Luft","Wasser","Feuer","Sand"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Zahl kommt nach 19?",
+answers: ["20","18","21","17"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat eine Banane?",
+answers: ["Gelb","Blau","Grün","Rot"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier lebt im Wasser?",
+answers: ["Fisch","Hund","Katze","Pferd"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Tage hat ein Wochenende?",
+answers: ["2","3","1","4"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was ist heiß?",
+answers: ["Feuer","Eis","Schnee","Regen"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welches Tier gibt Milch?",
+answers: ["Kuh","Huhn","Hund","Katze"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat Blut?",
+answers: ["Rot","Blau","Gelb","Grün"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was fährt auf Schienen?",
+answers: ["Zug","Auto","Fahrrad","Bus"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Tage hat der Februar meistens?",
+answers: ["28","30","31","29 immer"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was fällt vom Himmel bei Regen?",
+answers: ["Wasser","Steine","Sand","Blätter"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Seiten hat ein Würfel?",
+answers: ["6","4","8","10"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat eine Tomate?",
+answers: ["Rot","Blau","Schwarz","Weiß"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Buchstaben hat das Alphabet?",
+answers: ["26","30","20","24"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was scheint nachts?",
+answers: ["Der Mond","Die Sonne","Der Regen","Der Wind"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Räder hat ein Auto normalerweise?",
+answers: ["4","2","3","6"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was braucht eine Pflanze zum Wachsen?",
+answers: ["Wasser","Cola","Milch","Saft"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Kontinente gibt es?",
+answers: ["7","5","3","10"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat eine Zitrone?",
+answers: ["Gelb","Blau","Rot","Grün"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Sekunden hat eine Minute?",
+answers: ["60","30","100","45"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Beine hat ein Tisch normalerweise?",
+answers: ["4","2","3","6"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Was ist kalt?",
+answers: ["Eis","Feuer","Sonne","Lava"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Zähne hat ein Erwachsener ungefähr?",
+answers: ["32","20","15","50"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Welche Farbe hat ein Apfel meistens?",
+answers: ["Rot","Blau","Lila","Schwarz"],
+correct: 0,
+level: "leicht"
+},
+
+{
+question: "Wie viele Kontinente gibt es auf der Erde?",
+answers: ["5","6","7","8"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Element hat das chemische Symbol O?",
+answers: ["Gold","Sauerstoff","Silber","Eisen"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wer schrieb 'Romeo und Julia'?",
+answers: ["Goethe","Shakespeare","Schiller","Kafka"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Bundesländer hat Deutschland?",
+answers: ["14","15","16","17"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Land hat die größte Fläche?",
+answers: ["USA","China","Kanada","Russland"],
+correct: 3,
+level: "mittel"
+},
+
+{
+question: "Wie viele Bits hat ein Byte?",
+answers: ["4","6","8","16"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Planeten hat unser Sonnensystem?",
+answers: ["7","8","9","10"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Was ist die Hauptstadt von Spanien?",
+answers: ["Barcelona","Madrid","Sevilla","Valencia"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Welches Organ pumpt Blut durch den Körper?",
+answers: ["Lunge","Leber","Herz","Niere"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Minuten hat ein Tag?",
+answers: ["720","1000","1440","1600"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welcher Planet wird als 'Roter Planet' bezeichnet?",
+answers: ["Mars","Venus","Saturn","Merkur"],
+correct: 0,
+level: "mittel"
+},
+
+{
+question: "Welches Land gewann die Fußball-WM 2014?",
+answers: ["Brasilien","Argentinien","Deutschland","Spanien"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Seiten hat ein Oktagon?",
+answers: ["6","7","8","9"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Was ist die Wurzel aus 81?",
+answers: ["7","8","9","10"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Knochen hat ein erwachsener Mensch?",
+answers: ["186","206","226","246"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Welches Gas benötigen Pflanzen für die Fotosynthese?",
+answers: ["Sauerstoff","Stickstoff","Kohlendioxid","Helium"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "In welchem Jahr fiel die Berliner Mauer?",
+answers: ["1987","1988","1989","1990"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Chromosomen hat ein Mensch?",
+answers: ["44","45","46","48"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Meer liegt zwischen Europa und Afrika?",
+answers: ["Nordsee","Ostsee","Mittelmeer","Rotes Meer"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Sekunden hat eine Stunde?",
+answers: ["1800","2400","3600","4000"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Land hat die meisten Einwohner?",
+answers: ["Indien","USA","China","Brasilien"],
+correct: 0,
+level: "mittel"
+},
+
+{
+question: "Wie viele Zähne hat ein Erwachsener normalerweise?",
+answers: ["28","30","32","36"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Metall ist flüssig bei Raumtemperatur?",
+answers: ["Eisen","Quecksilber","Kupfer","Aluminium"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Tage hat ein Schaltjahr?",
+answers: ["364","365","366","367"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wer malte die Mona Lisa?",
+answers: ["Michelangelo","Da Vinci","Van Gogh","Picasso"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Bundesstaaten hat die USA?",
+answers: ["48","49","50","51"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie heißt der längste Fluss der Welt?",
+answers: ["Amazonas","Nil","Mississippi","Donau"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Welches Land gehört nicht zur EU?",
+answers: ["Norwegen","Deutschland","Frankreich","Italien"],
+correct: 0,
+level: "mittel"
+},
+
+{
+question: "Wie viele Herzen hat ein Oktopus?",
+answers: ["1","2","3","4"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Grad hat ein rechter Winkel?",
+answers: ["45","60","90","120"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Was ist die chemische Formel für Wasser?",
+answers: ["H2O","CO2","O2","NaCl"],
+correct: 0,
+level: "mittel"
+},
+
+{
+question: "Welches Land liegt südlich von Deutschland?",
+answers: ["Polen","Dänemark","Österreich","Belgien"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Tasten hat ein Standard-Klavier?",
+answers: ["76","80","88","92"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welcher Planet ist der größte im Sonnensystem?",
+answers: ["Mars","Saturn","Jupiter","Neptun"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Meter sind ein Kilometer?",
+answers: ["100","500","1000","1500"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Tier ist ein Säugetier?",
+answers: ["Hai","Frosch","Delfin","Adler"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Land hat die meisten Zeitzonen?",
+answers: ["USA","China","Russland","Kanada"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Spielkarten hat ein klassisches Kartenspiel?",
+answers: ["48","50","52","54"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Kontinente liegen vollständig auf der Südhalbkugel?",
+answers: ["0","1","2","3"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Liter Blut hat ein Erwachsener ungefähr?",
+answers: ["2","3","5","8"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie heißt die Hauptstadt von Kanada?",
+answers: ["Toronto","Ottawa","Vancouver","Montreal"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Minuten dauert ein Basketballspiel (NBA)?",
+answers: ["40","45","48","50"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Gas macht den größten Anteil unserer Atmosphäre aus?",
+answers: ["Sauerstoff","Stickstoff","CO2","Helium"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Wie viele Jahre dauert ein olympischer Zyklus?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Planeten sind Gasriesen?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Farben hat ein Regenbogen?",
+answers: ["5","6","7","8"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Tage dauerte der Zweite Weltkrieg (ungefähr 6 Jahre)?",
+answers: ["4","5","6","7"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Welches Land grenzt nicht an Deutschland?",
+answers: ["Polen","Frankreich","Spanien","Österreich"],
+correct: 2,
+level: "mittel"
+},
+
+{
+question: "Wie viele Sekunden hat ein Tag?",
+answers: ["43200","86400","100000","120000"],
+correct: 1,
+level: "mittel"
+},
+
+{
+question: "Welches Element hat die Ordnungszahl 79?",
+answers: ["Silber","Gold","Platin","Kupfer"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Protonen hat ein Kohlenstoff-Atom?",
+answers: ["4","6","8","12"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wer entwickelte die Relativitätstheorie?",
+answers: ["Newton","Tesla","Einstein","Galilei"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie heißt der längste Fluss Südamerikas?",
+answers: ["Amazonas","Orinoco","Paraná","Magdalena"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "In welchem Jahr begann der Erste Weltkrieg?",
+answers: ["1912","1914","1916","1918"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welcher Planet hat die meisten bekannten Monde?",
+answers: ["Jupiter","Saturn","Uranus","Neptun"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Nullen hat eine Milliarde?",
+answers: ["6","9","12","15"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welches Land hat die größte Küstenlinie?",
+answers: ["USA","Australien","Kanada","Russland"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Was ist die Quadratwurzel von 144?",
+answers: ["10","11","12","13"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Welches Gas ist am häufigsten im Universum?",
+answers: ["Sauerstoff","Stickstoff","Helium","Wasserstoff"],
+correct: 3,
+level: "schwer"
+},
+
+{
+question: "Wie viele Chromosomen hat eine menschliche Keimzelle?",
+answers: ["23","46","22","44"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Welches Land gewann die erste Fußball-WM 1930?",
+answers: ["Brasilien","Uruguay","Deutschland","Italien"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie heißt die Hauptstadt von Neuseeland?",
+answers: ["Auckland","Christchurch","Wellington","Hamilton"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Welches Metall hat das Symbol Fe?",
+answers: ["Fluor","Eisen","Fermium","Francium"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Elemente hat das Periodensystem aktuell?",
+answers: ["108","112","118","124"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wer schrieb 'Faust'?",
+answers: ["Schiller","Goethe","Kafka","Lessing"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Seiten hat ein Dodekaeder?",
+answers: ["10","12","14","16"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Minuten hat ein Schaltjahr?",
+answers: ["525600","527040","524160","526320"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welches Land hat die meisten Vulkane?",
+answers: ["Japan","Indonesien","Island","Chile"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Spieler stehen beim Rugby pro Team auf dem Feld?",
+answers: ["11","13","15","17"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Welches ist das kleinste Knochen im menschlichen Körper?",
+answers: ["Steigbügel","Hammer","Amboss","Schlüsselbein"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Wie viele Sekunden hat ein Jahr (ungefähr)?",
+answers: ["31 Millionen","20 Millionen","40 Millionen","60 Millionen"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Welches Land liegt komplett innerhalb Südafrikas?",
+answers: ["Lesotho","Eswatini","Botswana","Namibia"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Wie heißt der höchste Berg Europas (kontinental)?",
+answers: ["Mont Blanc","Elbrus","Matterhorn","Zugspitze"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welche Stadt war früher Konstantinopel?",
+answers: ["Athen","Rom","Istanbul","Alexandria"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Nullen hat eine Billion (DE)?",
+answers: ["9","10","12","15"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Welches Organ produziert Insulin?",
+answers: ["Leber","Bauchspeicheldrüse","Milz","Niere"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Quadratzentimeter hat ein Quadratmeter?",
+answers: ["100","1000","10000","100000"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Welcher Planet hat den stärksten Sturm im Sonnensystem?",
+answers: ["Mars","Jupiter","Saturn","Neptun"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Grad hat die Innenwinkelsumme eines Dreiecks?",
+answers: ["90","180","270","360"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele DNA-Basenpaare hat der Mensch ungefähr?",
+answers: ["1 Milliarde","3 Milliarden","5 Milliarden","10 Milliarden"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welches Land hat die älteste noch bestehende Monarchie?",
+answers: ["England","Japan","Spanien","Dänemark"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Ziffern hat Pi auf 3,1415 gerundet?",
+answers: ["3","4","5","6"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Farben kann das menschliche Auge ungefähr unterscheiden?",
+answers: ["1 Million","10 Millionen","100 Millionen","1 Milliarde"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Welches Land hat die größte Wüste der Welt?",
+answers: ["Saudi-Arabien","Australien","Algerien","Antarktis"],
+correct: 3,
+level: "schwer"
+},
+
+{
+question: "Wie viele Planeten sind größer als die Erde?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Sekunden dauert ein NBA-Spiel insgesamt?",
+answers: ["2400","2880","3600","4200"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Herzschläge hat ein Mensch pro Minute im Durchschnitt?",
+answers: ["40","60-80","100","120"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Tasten hat eine Standard-Computer-Tastatur ungefähr?",
+answers: ["88","95","101-105","120"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Minuten hat ein Tag exakt?",
+answers: ["1440","1480","1500","1600"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Wie viele Liter Luft atmet ein Mensch täglich ungefähr?",
+answers: ["2000","5000","10000","20000"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Planeten befinden sich zwischen Erde und Sonne?",
+answers: ["0","1","2","3"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Grad Celsius entsprechen 0 Kelvin?",
+answers: ["-273","-100","0","273"],
+correct: 0,
+level: "schwer"
+},
+
+{
+question: "Wie viele Millisekunden sind eine Sekunde?",
+answers: ["100","500","1000","10000"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Einwohner hat Tokio ungefähr (Metropolregion)?",
+answers: ["10 Mio","20 Mio","30 Mio","37 Mio"],
+correct: 3,
+level: "schwer"
+},
+
+{
+question: "Wie viele Kontinente grenzen an den Pazifik?",
+answers: ["3","4","5","6"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Atome hat ein Wassermolekül?",
+answers: ["2","3","4","5"],
+correct: 1,
+level: "schwer"
+},
+
+{
+question: "Wie viele Jahre dauerte der Hundertjährige Krieg?",
+answers: ["100","95","116","120"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Sekunden hat eine Woche?",
+answers: ["302400","504000","604800","700000"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Hauptstädte hat Südafrika?",
+answers: ["1","2","3","4"],
+correct: 2,
+level: "schwer"
+},
+
+{
+question: "Wie viele Dezimalstellen hat Pi (bekannt, gerundet)?",
+answers: ["Unendlich viele","1000","1 Million","Keine"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Welches Teilchen vermittelt die starke Kernkraft?",
+answers: ["Photon","Gluon","Boson","Neutrino"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Millisekunden hat ein Tag?",
+answers: ["86.400.000","8.640.000","864.000","864.000.000"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Welcher Planet rotiert rückwärts?",
+answers: ["Mars","Venus","Jupiter","Saturn"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Basenpaare hat das menschliche Genom ungefähr?",
+answers: ["1 Milliarde","3 Milliarden","6 Milliarden","10 Milliarden"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie heißt das größte bekannte Schwarze Loch?",
+answers: ["Sagittarius A*","TON 618","Cygnus X-1","M87"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Kombinationen hat ein 3-stelliger Zahlencode (0-9)?",
+answers: ["100","500","1000","900"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Welches Land hat die älteste bekannte Zivilisation?",
+answers: ["China","Ägypten","Irak (Mesopotamien)","Indien"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Atome enthält ein Methanmolekül (CH4)?",
+answers: ["4","5","6","3"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden hat ein Schaltjahr?",
+answers: ["31.536.000","31.622.400","32.000.000","30.000.000"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Bits hat ein Kilobyte (klassisch)?",
+answers: ["1000","1024","8192","8000"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Welche Konstante beschreibt die Lichtgeschwindigkeit?",
+answers: ["c","g","h","k"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Ziffern hat eine ISBN-13?",
+answers: ["10","11","12","13"],
+correct: 3,
+level: "ultra"
+},
+
+{
+question: "Wie viele Zeitzonen hat Frankreich (inkl. Überseegebiete)?",
+answers: ["1","5","12","15"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Kombinationen hat ein 4-stelliger PIN-Code?",
+answers: ["1000","5000","10000","9999"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Elemente sind natürliche Edelgase?",
+answers: ["5","6","7","8"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele DNA-Stränge hat eine Doppelhelix?",
+answers: ["1","2","3","4"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden braucht Licht für 1 km?",
+answers: ["0,0000033","0,0033","0,033","0,3"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Planeten sind kleiner als die Erde?",
+answers: ["2","3","4","5"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Symmetrieachsen hat ein Quadrat?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Kontinente berühren den Indischen Ozean?",
+answers: ["3","4","5","6"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Atome sind in einem Wassermolekül?",
+answers: ["2","3","4","5"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden hat eine Dekade?",
+answers: ["315 Millionen","3153 Millionen","31 Millionen","3 Millionen"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele mögliche Ergebnisse gibt es beim Würfeln mit 2 Würfeln?",
+answers: ["12","36","24","18"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Elemente hat das moderne Periodensystem?",
+answers: ["112","115","118","120"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Grad hat ein Kreis im Bogenmaß?",
+answers: ["π","2π","360","180"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden sind 1 Mikrosekunde?",
+answers: ["0,000001","0,00001","0,001","0,01"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Hauptquantenzahlen gibt es?",
+answers: ["3","4","Unendlich viele","7"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Möglichkeiten gibt es beim Münzwurf mit 3 Münzen?",
+answers: ["6","8","4","3"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Basen gibt es in DNA?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Ziffern hat die Zahl 1 Million?",
+answers: ["6","7","8","5"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden hat eine Stunde exakt?",
+answers: ["3600","3660","3000","6000"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Nullen hat eine Trillion (DE)?",
+answers: ["15","18","12","21"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Elektronen hat ein neutrales Helium-Atom?",
+answers: ["1","2","3","4"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Planeten haben Ringe?",
+answers: ["2","3","4","5"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden hat ein Monat (30 Tage)?",
+answers: ["2.592.000","3.000.000","1.000.000","5.000.000"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Kombinationsmöglichkeiten hat ein 5-stelliger Code?",
+answers: ["10000","50000","100000","99999"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Farben kann ein 8-Bit-Farbsystem darstellen?",
+answers: ["16","64","128","256"],
+correct: 3,
+level: "ultra"
+},
+
+{
+question: "Wie viele Grad Celsius entsprechen 100 Kelvin?",
+answers: ["-173","-100","0","173"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden hat ein Jahrhundert?",
+answers: ["3 Milliarden","31 Milliarden","315 Millionen","3 Millionen"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Seiten hat ein Ikosaeder?",
+answers: ["12","20","30","24"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele natürliche Satelliten hat die Erde?",
+answers: ["1","2","3","4"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Moleküle enthält O2?",
+answers: ["1","2","3","Unendlich viele"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden sind 10 Minuten?",
+answers: ["600","1000","3600","500"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Quadratzentimeter hat ein Quadratmeter?",
+answers: ["100","1000","10000","100000"],
+correct: 2,
+level: "ultra"
+},
+
+{
+question: "Wie viele Bits hat ein Megabyte (binär)?",
+answers: ["8.000.000","8.388.608","1.000.000","1.048.576"],
+correct: 1,
+level: "ultra"
+},
+
+{
+question: "Wie viele Sekunden braucht die Erde für eine Rotation?",
+answers: ["86400","86000","90000","80000"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele mögliche Ergebnisse gibt es beim Würfeln mit 3 Würfeln?",
+answers: ["216","108","36","100"],
+correct: 0,
+level: "ultra"
+},
+
+{
+question: "Wie viele Ecken hat ein Tesserakt?",
+answers: ["8","12","16","24"],
+correct: 2,
+level: "ultra"
+}
+
+];
+
+/* =========================
+   VARIABLEN
+========================= */
+let quiz = [];
+let currentQuestion = 0;
+let locked = false;
+let currentLevel = "";
+let score = 0;
+let timerInterval;
+let timeLeft;
+
+function increaseGamesPlayed() {
+    let games = localStorage.getItem("games_played") || 0;
+    localStorage.setItem("games_played", parseInt(games) + 1);
+}
+
+
+/* =========================
+   SHUFFLE
+========================= */
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+/* =========================
+   QUIZ START
+========================= */
+function startQuiz(level) {
+    increaseGamesPlayed();
+    playClickSound();
+    currentLevel = level;
+    score = 0;
+    document.getElementById("score").innerText = "Score: 0";
+
+    // Alle Fragen dieses Levels holen
+    const levelQuestions =
+        allQuestions.filter(q => q.level === level);
+
+    // Mischen
+    shuffleArray(levelQuestions);
+
+    // Nur 20 pro Runde
+    quiz = levelQuestions.slice(0, 20);
+
+    currentQuestion = 0;
+
+    document.getElementById("difficultySelect").style.display = "none";
+    document.getElementById("endScreen").style.display = "none";
+    document.getElementById("quizArea").style.display = "block";
+
+    loadQuestion();
+}
+
+
+/* =========================
+   FRAGE LADEN
+========================= */
+function loadQuestion() {
+    locked = false;
+
+    document.getElementById("progress").innerText =
+        `Frage ${currentQuestion + 1} / ${quiz.length}`;
+
+    document.getElementById("progressFill").style.width =
+        (currentQuestion / quiz.length) * 100 + "%";
+
+    document.getElementById("feedback").innerHTML = "";
+    document.getElementById("nextBtn").style.display = "none";
+
+    const q = quiz[currentQuestion];
+    document.getElementById("question").innerText = q.question;
+
+    const shuffledAnswers = q.answers.map((text, i) => ({
+        text,
+        isCorrect: i === q.correct
+    }));
+    shuffleArray(shuffledAnswers);
+
+    shuffledAnswers.forEach((ans, i) => {
+        const btn = document.getElementById("a" + i);
+        btn.innerText = ans.text;
+        btn.disabled = false;
+        btn.style.backgroundColor = "";
+        btn.dataset.correct = ans.isCorrect;
+    });
+
+    startTimer();
+}
+
+/* =========================
+   TIMER
+========================= */
+function startTimer() {
+    clearInterval(timerInterval);
+
+    if (currentLevel === "leicht") timeLeft = 40;
+    else if (currentLevel === "mittel") timeLeft = 30;
+    else if (currentLevel === "schwer") timeLeft = 20;
+    else if (currentLevel === "ultra") timeLeft = 15;
+
+    document.getElementById("timer").style.color = "#8b949e";
+    document.getElementById("timer").innerText = `⏱️ Zeit: ${timeLeft}s`;
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = `⏱️ Zeit: ${timeLeft}s`;
+        if (timeLeft <= 5)
+            document.getElementById("timer").style.color = "#f85149";
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timeUp();
+        }
+    }, 1000);
+}
+
+function timeUp() {
+    if (locked) return;
+    locked = true;
+    playWrongSound();
+
+    const correctBtn =
+        document.querySelector('button[data-correct="true"]');
+    correctBtn.classList.add("time-up");
+    correctBtn.style.backgroundColor = "#238636";
+
+    document.getElementById("feedback").innerHTML =
+        "<div style='color:#f85149;font-size:20px;'>⏰ Zeit abgelaufen!</div>";
+
+    document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+/* =========================
+   ANTWORT
+========================= */
+function answer(index) {
+    if (locked) return;
+    locked = true;
+    clearInterval(timerInterval);
+
+    const clickedBtn = document.getElementById("a" + index);
+    const isCorrect = clickedBtn.dataset.correct === "true";
+
+    if (isCorrect) {
+        playCorrectSound();
+
+        let mult = 1;
+        if (currentLevel === "mittel") mult = 1.5;
+        if (currentLevel === "schwer") mult = 2;
+        if (currentLevel === "ultra") mult = 3;
+
+        const points = Math.round((100 + timeLeft * 5) * mult);
+        score += points;
+        document.getElementById("score").innerText = `Score: ${score}`;
+
+        const popup = document.getElementById("scorePopup");
+        popup.innerText = `+${points}`;
+        popup.classList.remove("score-popup-show");
+        void popup.offsetWidth;
+        popup.classList.add("score-popup-show");
+
+        clickedBtn.classList.add("correct");
+        clickedBtn.style.backgroundColor = "#238636";
+
+        document.getElementById("feedback").innerHTML =
+            "<div style='color:#3fb950;font-size:20px;'>✔ Richtig!</div>";
+    } else {
+        playWrongSound();
+
+        clickedBtn.classList.add("wrong");
+        clickedBtn.style.backgroundColor = "#da3633";
+
+        const correctBtn =
+            document.querySelector('button[data-correct="true"]');
+        correctBtn.style.backgroundColor = "#238636";
+
+        document.getElementById("feedback").innerHTML =
+            "<div style='color:#f85149;font-size:20px;'>✖ Falsch</div>";
+    }
+
+    document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+/* =========================
+   NÄCHSTE FRAGE
+========================= */
+function nextQuestion() {
+    playClickSound();
+    currentQuestion++;
+
+    if (currentQuestion >= quiz.length) {
+        const key = `quiz_highscore_${currentLevel}`;
+        const saved = localStorage.getItem(key) || 0;
+
+        if (score > saved) {
+            localStorage.setItem(key, score);
+        }
+
+        document.getElementById("highscoreText").innerText =
+            `Highscore (${currentLevel}): ${localStorage.getItem(key)}`;
+
+        document.getElementById("quizArea").style.display = "none";
+        document.getElementById("endScreen").style.display = "block";
+    } else {
+        loadQuestion();
+    }
+}
+
+/* =========================
+   RESTART / ZURÜCK
+========================= */
+function restartSameDifficulty() {
+
+    playClickSound();
+    score = 0;
+    document.getElementById("score").innerText = "Score: 0";
+
+    currentQuestion = 0;
+    shuffleArray(quiz);
+    document.getElementById("endScreen").style.display = "none";
+    document.getElementById("quizArea").style.display = "block";
+    loadQuestion();
+}
+function showDifficultySelect() {
+    playClickSound();
+    document.getElementById("endScreen").style.display = "none";
+    document.getElementById("difficultySelect").style.display = "block";
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+</script>
+
+</body>
+</html>

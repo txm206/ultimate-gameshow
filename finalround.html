@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finale Runde</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🏆 Finale Runde</h1>
+
+    <p id="round" class="round-info">Runde 1 / 6</p>
+    <p id="timer">⏱️ 10</p>
+
+    <div class="card">
+
+        <h2 id="title"></h2>
+
+        <p id="question"></p>
+
+        <input
+            id="answer"
+            type="text"
+            placeholder="Antwort eingeben..."
+        >
+
+        <br><br>
+
+        <button onclick="submitAnswer()">Antwort bestätigen</button>
+
+        <p id="score">⭐ Punkte: 0</p>
+
+    </div>
+
+</div>
+
+<script src="finalround.js"></script>
+
+</body>
+</html>

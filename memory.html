@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Runde</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="quiz-page">
+
+<div class="quiz-container">
+
+    <h1>🧠 Memory Runde</h1>
+    
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        <button id="memorySoundToggle"
+                onclick="toggleMemorySound()"
+                style="
+                    background:none;
+                    border:none;
+                    font-size:18px;
+                    cursor:pointer;
+                    color:#58a6ff;
+                ">
+            🔊
+        </button>
+    </div>    
+
+    <p id="memoryInfo" style="text-align:center; margin-bottom:15px;">
+        Züge: 0 | Zeit: 0s
+    </p>
+
+    <p id="memoryBestTime"
+        style="text-align:center; margin-top:-5px; margin-bottom:20px; color:gold;">
+        🏆 Bestzeit: -
+    </p>
+
+    <div id="memoryDifficulty" class="answers" style="margin-bottom:25px;">
+        <button onclick="startMemory('easy')">🟢 Leicht</button>
+        <button onclick="startMemory('medium')">🟡 Mittel</button>
+        <button onclick="startMemory('hard')">🔴 Schwer</button>
+    </div>
+
+    <!-- SPIELFELD -->
+    <div id="memoryGrid"
+     style="display:none; gap:12px;">
+    </div>
+
+
+    <p id="memoryResult"
+       style="text-align:center; margin-top:20px;"></p>
+
+       <div id="memoryChangeDifficulty"
+            class="answers"
+            style="margin-top:20px; display:none;">
+
+            <button onclick="startMemory('easy')">🟢 Leicht</button>
+            <button onclick="startMemory('medium')">🟡 Mittel</button>
+            <button onclick="startMemory('hard')">🔴 Schwer</button>
+        </div>
+
+
+    <button onclick="restartMemory()"
+            class="end-btn secondary"
+            style="display:none;"
+            id="memoryRestart">
+        🔁 Nochmal spielen
+    </button>
+
+    <br><br>
+
+    <button onclick="window.location.href='index.html'"
+            class="end-btn primary">
+        ⬅ Zurück zur Übersicht
+    </button>
+
+</div>
+
+<script src="memory.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Reaktionsspiel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="quiz-page">
+
+<div class="quiz-container" id="reactionGame">
+
+    <h1>⚡ Reaktionsspiel</h1>
+
+    <p id="reactionText" style="text-align:center; margin-bottom:20px;">
+        Klicke auf <strong>Start</strong>, sobald du bereit bist.
+    </p>
+
+    <div id="reactionBox"
+         style="
+            height:200px;
+            border-radius:14px;
+            background-color:#30363d;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+            cursor:pointer;
+            user-select:none;
+         ">
+        Start
+    </div>
+
+    <p id="reactionResult"
+       style="text-align:center; margin-top:20px;"></p>
+
+    <button id="reactionRestart"
+            onclick="resetGame()"
+            class="end-btn secondary"
+            style="display:none;">
+        🔁 Nochmal spielen
+    </button>
+
+    <br><br>
+
+    <button onclick="window.location.href='index.html'"
+            class="end-btn primary">
+        ⬅ Zurück zur Übersicht
+    </button>
+
+</div>
+
+<script src="reaction.js"></script>
+</body>
+</html>

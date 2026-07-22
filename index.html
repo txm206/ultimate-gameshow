@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Gameshow Übersicht</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-512.png">
+</head>
+
+<body>
+
+    <header>
+        <h1>🎯 Ultimate Gameshow</h1>
+        <p>Wähle ein Spiel und stelle dein Wissen unter Beweis</p>
+    </header>
+
+    <div id="homeRank" class="home-rank">
+    🏅 Aktueller Rang: <strong>Lädt...</strong>
+    </div>
+
+    <main>
+        <a href="Quiz.html" class="card">
+            <h2>❓ Quiz</h2>
+            <p>
+                Klassisches Wissensquiz mit verschiedenen Kategorien und Schwierigkeitsstufen.
+            </p>
+            <div class="score-box">
+                📚 Level: 1 - 4
+            </div>
+        </a>
+        
+
+        <a class="card" href="estimate.html">
+            <h2>🔢 Schätzfragen</h2>
+            <p>
+                Schätze Zahlen möglichst genau.<br>
+                Je näher du dran bist, desto mehr Punkte!
+            </p>
+            <div id="estimateHighscore" class="score-box">
+                🏆 Highscore:
+            </div>
+        </a>        
+
+        <a class="card" href="reaction.html">
+            <h2>⚡ Reaktionsspiel</h2>
+        
+            <p>
+                Teste deine Reaktionsgeschwindigkeit.
+            </p>
+
+            <div id="reactionBest" class="score-box">
+                Bestzeit:
+            </div>
+        </a>
+
+        <a class="card" href="truefalse.html">
+            <h2>✔️True or False?❌</h2>
+            <p>
+                Entscheide schnell, ob eine Aussage stimmt.<br>
+                Ein Fehler – und du bist raus!
+            </p>
+            <div id="trueFalseBest" class="score-box">
+                Beste Streak: -
+            </div>
+        </a>
+        
+        <a class="card" href="memory.html">
+            <h2>🧠 Memory Runde</h2>
+            <p>
+                Merke dir Kartenpaare und finde sie wieder.<br>
+                Zeit & Züge entscheiden!
+            </p>
+            <div id="memoryBest" class="score-box">
+                Bestzeit: -
+            </div>
+        </a>
+        
+        <div class="card" onclick="window.location.href='stats.html'">
+            <h2>📊 Statistiken</h2>
+            <p>Alle Highscores, Ränge und deine Performance im Überblick.</p>
+            <div id="statsRank" class="score-box">
+                Rang: -
+            </div>
+        </div>
+
+        <a class="card" href="bilderraten.html">
+            <h2>🖼️ Bilder erraten</h2>
+
+            <p>
+                Errate möglichst schnell, was auf dem Bild zu sehen ist.<br>
+                Je früher du die richtige Antwort gibst, desto mehr Punkte erhältst!
+            </p>
+
+            <div id="pictureHighscore" class="score-box">
+                Highscore:
+            </div>
+        </a>       
+        
+        <div class="card" id="finalCard">
+
+            <h2>🏆 Finale Runde</h2>
+
+            <p>
+                Stelle dich der ultimativen Herausforderung.<br>
+                Nur die besten Spieler erreichen das Finale!
+            </p>
+
+            <div id="finalStatus" class="score-box">
+                🔒 Ab Elite I
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <br>© 2026 Ultimate Gameshow</br>
+        <br>gameshow-quizz@gmail.com</br>
+        <br>Hosted By Tim Taube</br>
+    </footer>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js");
+        }
+    </script>
+    
+    <script>
+        const best = localStorage.getItem("reaction_best");
+        const bestEl = document.getElementById("reactionBest");
+        
+        if (best && bestEl) {
+            bestEl.innerText = `Bestzeit: ${best} ms`;
+        }
+    </script>
+    
+    <script>
+        const estHigh = localStorage.getItem("estimate_highscore");
+        const estEl = document.getElementById("estimateHighscore");
+        
+        if (estHigh && estEl) {
+            estEl.innerText = `Highscore: ${estHigh}`;
+        }
+    </script>
+
+    <script>
+        const trueFalseBest =
+            localStorage.getItem("tf_best_streak") || 0;
+
+        document.getElementById("trueFalseBest").textContent =
+            "Beste Streak: " + trueFalseBest;
+    </script>
+
+    <script>
+        const memoryBest =
+            localStorage.getItem("memory_best_time");
+
+        document.getElementById("memoryBest").textContent =
+            "Bestzeit: " + (memoryBest ? memoryBest + " s" : "-");
+    </script>
+
+    <script>
+        const bilderHighscore = localStorage.getItem("bilderHighscore") || 0;
+
+        document.getElementById("pictureHighscore").textContent =
+            "Highscore: " + bilderHighscore;
+    </script>
+
+        
+    <script src="rank.js"></script>
+
+    <script>
+
+    const rank = calculateRank();
+
+    document.getElementById("homeRank").innerHTML =
+    `🏅 Aktueller Rang: <strong>${rank}</strong>`;
+
+    document.getElementById("statsRank").textContent =
+    "Rang: " + rank;
+
+    const finalCard = document.getElementById("finalCard");
+    const finalStatus = document.getElementById("finalStatus");
+
+    if (
+        rank.includes("Elite I") ||
+        rank.includes("Elite II") ||
+        rank.includes("Elite III") ||
+        rank.includes("Champion")
+    ){
+
+        finalStatus.textContent = "⭐ Jetzt verfügbar!";
+
+        finalCard.style.cursor = "pointer";
+
+        finalCard.onclick = () => {
+            window.location.href = "finalround.html";
+        };
+
+    }else{
+
+        finalStatus.textContent = "🔒 Ab Elite I";
+
+        finalCard.style.opacity = "0.65";
+        finalCard.style.cursor = "not-allowed";
+
+        finalCard.onclick = () => {
+            alert("🔒 Die Finale Runde wird ab Rang Elite I freigeschaltet.");
+        };
+
+    }
+
+</script>
+
+
+</body>
+</html>
+

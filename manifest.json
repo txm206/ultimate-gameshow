@@ -1,0 +1,16 @@
+{
+    "name": "Ultimate Gameshow",
+    "short_name": "Gameshow",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#0d1117",
+    "theme_color": "#0a3cff",
+    "icons": [
+      {
+        "src": "icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+  

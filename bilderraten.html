@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bilder erraten</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-512.png">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="quiz-page">
+
+<div class="quiz-container">
+
+    <h1>🖼️ Bilder erraten</h1>
+
+    <div id="pictureProgress"></div>
+
+    <div class="estimate-progress-container">
+        <div id="pictureProgressBar" class="estimate-progress-bar"></div>
+    </div>
+
+    <div id="pictureTimer" style="text-align:right;margin-bottom:10px;">
+        ⏱️ 15
+    </div>
+
+    <img
+        id="pictureImage"
+        src=""
+        alt="Bild"
+        style="
+        width:100%;
+        max-height:320px;
+        object-fit:contain;
+        border-radius:12px;
+        margin-top:15px;
+        ">
+
+    <input
+        id="pictureAnswer"
+        type="text"
+        placeholder="Was ist auf dem Bild?"
+        style="
+        width:100%;
+        padding:12px;
+        margin-top:20px;
+        border:none;
+        border-radius:10px;
+        font-size:16px;
+        ">
+
+    <button onclick="checkPicture()" style="margin-top:15px;">
+        Bestätigen
+    </button>
+
+</div>
+<div id="endScreen" class="hidden">
+
+    <div class="endBox">
+
+        <h2>🏁 Spiel beendet</h2>
+
+        <pre id="endSummary"></pre>
+
+        <button onclick="restartGame()">
+            🔄 Nochmal spielen
+        </button>
+
+        <button onclick="goHome()">
+            🏠 Zurück zum Menü
+        </button>
+
+    </div>
+
+</div>
+<script src="bilderraten.js"></script>
+
+</body>
+</html>

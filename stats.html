@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiken</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>📊 Statistiken</h1>
+
+  <div class="stats-box">
+
+    <h2 id="rankHeader" onclick="toggleRanks()" style="cursor:pointer;">
+        🏆 Dein Rang ▼
+    </h2>
+
+    <p id="rank">-</p>
+
+    <div id="rankList" style="display:none; margin-top:20px;">
+
+        <p>🏆 Champion – ab 48.000 Punkte</p>
+        <p>💎 Elite III – ab 42.000 Punkte</p>
+        <p>💎 Elite II – ab 36.000 Punkte</p>
+        <p>💎 Elite I – ab 30.000 Punkte</p>
+        <p>🥇 Gold III – ab 26.000 Punkte</p>
+        <p>🥇 Gold II – ab 22.000 Punkte</p>
+        <p>🥇 Gold I – ab 18.000 Punkte</p>
+        <p>🥈 Silber III – ab 15.000 Punkte</p>
+        <p>🥈 Silber II – ab 12.500 Punkte</p>
+        <p>🥈 Silber I – ab 10.000 Punkte</p>
+        <p>🥉 Bronze III – ab 7.500 Punkte</p>
+        <p>🥉 Bronze II – ab 5.000 Punkte</p>
+        <p>🥉 Bronze I – ab 2.500 Punkte</p>
+        <p>🔰 Anfänger – unter 2.500 Punkte</p>
+
+    </div>
+
+</div>
+
+    <div class="stats-box left-box">
+        <h2>⭐ Gesamtpunkte</h2>
+        <p id="totalPoints">0</p>
+    </div>
+
+    <div class="card">
+
+        <h2>🧠 Quiz</h2>
+
+        <div class="quiz-grid">
+
+            <p>🟢 Leicht: <span id="quizEasy"></span></p>
+            <p>🟡 Mittel: <span id="quizMedium"></span></p>
+
+            <p>🔴 Schwer: <span id="quizHard"></span></p>
+            <p>🟣 Ultra: <span id="quizUltra"></span></p>
+
+        </div>
+
+    </div>
+
+
+<div class="stats-grid">
+
+    <div class="card">
+        <h2>📊 Schätzfragen</h2>
+        <p id="estimateScore" class="stats-value">0</p>
+        <p class="stats-unit">Punkte</p>
+    </div>
+
+    <div class="card">
+        <h2>🖼️ Bilder erraten</h2>
+        <p id="pictureScore" class="stats-value">0</p>
+        <p class="stats-unit">Punkte</p>
+    </div>
+
+    <div class="card">
+        <h2>✔️ True or False</h2>
+        <p id="tfScore" class="stats-value">0</p>
+        <p class="stats-unit">Streak</p>
+    </div>
+
+    <div class="card">
+        <h2>⚡ Reaktionsspiel</h2>
+        <p id="reactionScore" class="stats-value">-</p>
+        <p class="stats-unit">ms</p>
+    </div>
+
+    <div class="card">
+        <h2>🧠 Memory</h2>
+        <p id="memoryScore" class="stats-value">-</p>
+        <p class="stats-unit">Sekunden</p>
+    </div>
+
+    <br>
+</div>
+
+<div class="stats-box">
+
+    <h2 id="achievementHeader"
+        onclick="toggleAchievements()"
+        style="cursor:pointer;">
+
+        🌟 Erfolge ▼
+
+    </h2>
+
+    <p id="achievementCount">0 / 10 freigeschaltet</p>
+
+    <div id="achievementList"
+     style="display:none; margin-top:25px;">
+    </div>
+
+</div>
+
+<div class="button-container">
+
+    <button class="reset-button" onclick="resetStats()">
+        🗑 Alle Statistiken zurücksetzen
+    </button>
+
+</div>
+
+<div class="button-container">
+    <a href="index.html" class="menu-button">
+         Zurück zum Hauptmenü
+    </a>
+</div>
+
+<script src ="rank.js"></script>
+<script src="stats.js"></script>
+
+</body>
+</html>
